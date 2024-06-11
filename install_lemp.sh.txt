@@ -1,0 +1,71 @@
+#!/bin/bash
+
+# Update package index and upgrade packages
+apt update && apt upgrade -y
+
+# Install Nginx
+apt install -y nginx
+
+# Allow Nginx through the firewall
+ufw allow 'Nginx HTTP'
+
+# Install MySQL
+apt install -y mysql-server
+
+# Secure MySQL installation
+mysql_secure_installation <<EOF
+
+y
+root
+root
+y
+y
+y
+y
+EOF
+
+# Install PHP and required PHP extensions
+apt install -y php-fpm php-mysql
+
+# Configure Nginx to use PHP Processor
+cat > /etc/nginx/sites-available/default <<EOF
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+
+    root /var/www/html;
+    index index.php index.html index.htm index.nginx-debian.html;
+
+    server_name _;
+
+    location / {
+        try_files \$uri \$uri/ =404;
+    }
+
+    location ~ \.php\$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/run/php/php8.1-fpm.sock;
+    }
+
+    location ~ /\.ht {
+        deny all;
+    }
+}
+EOF
+
+# Test Nginx configuration and reload
+nginx -t && systemctl reload nginx
+
+# Create a PHP info file for testing
+echo "<?php phpinfo(); ?>" > /var/www/html/info.php
+
+# Print message indicating that the installation is complete
+echo "LEMP stack installed successfully. You can test PHP by accessing http://your_server_ip/info.php"
+
+# Restart services to make sure all settings are applied
+systemctl restart nginx
+systemctl restart php8.1-fpm
+systemctl restart mysql
+
+# Print MySQL root password
+echo "MySQL root user password is set to 'root'"
