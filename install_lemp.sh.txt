@@ -8,11 +8,10 @@ apt install -y nginx
 
 # Allow Nginx through the firewall
 ufw allow 'Nginx HTTP'
-
+ufw enable
+ufw status
 # Install MySQL
 apt install -y mysql-server
-
-# Secure MySQL installation
 mysql_secure_installation <<EOF
 
 y
